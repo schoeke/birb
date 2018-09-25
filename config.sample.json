@@ -1,0 +1,18 @@
+{
+    "host": "irc.freenode.net",
+    "port": 6667,
+    "ssl": true,
+    "ssl_allow_invalid": false,
+    "channels": [
+        "#foo",
+        "#bar"
+    ],
+    "nick": "test",
+    "username": "test",
+    "realname": "test",
+    "pass": "sup3rS3cur3P4ssw0rd",
+    "nickserv": {
+        "username": "test",
+        "password": "l33tp455w0rD"
+    }
+}
