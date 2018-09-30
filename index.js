@@ -36,16 +36,16 @@ client.on('topic', event => {
   if (event.changed) {
     writeLog(
       logPlace(event),
-      'Topic changed to' + event.topic + 'by' + event.user.getNick()
+      'Topic changed to ' + event.topic + ' by ' + event.user.getNick()
     )
   } else {
     writeLog(
       logPlace(event),
-      'Topic was set to' +
+      'Topic was set to ' +
       event.topic +
-      'by' +
+      ' by ' +
       event.user.nick +
-      'on' +
+      ' on ' +
       moment(event.time).format('YYYY-MM-DD HH:mm:ss') +
       '.'
     )
@@ -55,15 +55,15 @@ client.on('topic', event => {
 client.on('nick', event => {
   writeLog(
     logPlace(event),
-    event.oldNick + ' changed its nick to' + event.user.getNick()
+    event.oldNick + ' changed its nick to ' + event.user.getNick()
   )
 })
 
 client.on('kick', event => {
   if (event.reason) {
-    writeLog(logPlace(event), event.user.getNick(), 'was kicked by', event.by, 'for', event.reason, '.')
+    writeLog(logPlace(event), event.user.getNick(), ' was kicked by ', event.by, ' for ', event.reason, '.')
   } else {
-    writeLog(logPlace(event), event.user.getNick(), 'was kicked by', event.by, '.')
+    writeLog(logPlace(event), event.user.getNick(), ' was kicked by ', event.by, '.')
   }
 })
 
