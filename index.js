@@ -8,6 +8,8 @@ const cheerio = require('cheerio')
 
 const handler = require('./birbHandler')
 
+var logging = true
+
 try {
   fs.accessSync('./config.json', fs.constants.F_OK)
   var config = require('./config.json')
@@ -72,6 +74,27 @@ client.on('message', function (event) {
   expandURL(event)
 })
 
+client.on('command', event => {
+  switch (event.cmd) {
+    case 'otr':
+      if (logging) {
+        event.reply('Logging has been turned off.')
+      } else {
+        event.reply('Logging has been turned on.')
+      }
+      logging = !logging
+      break
+
+    case 'status':
+      if (logging) {
+        event.reply('Logging is turned on.')
+      } else {
+        event.reply('Logging is turned off.')
+      }
+      break
+  }
+})
+
 function expandURL (event) {
   let words = event.message.split(' ')
   for (let i = 0; i < words.length; i++) {
@@ -116,11 +139,13 @@ function checkLogDir (directory) {
 }
 
 function writeLog (where, what) {
-  fs.appendFile(
-    where,
-    moment().format('HH:mm:ss') + ' ' + what + '\n',
-    handler.logWriteError
-  )
+  if (logging) {
+    fs.appendFile(
+      where,
+      moment().format('HH:mm:ss') + ' ' + what + '\n',
+      handler.logWriteError
+    )
+  }
 }
 
 function logPlace (event) {
