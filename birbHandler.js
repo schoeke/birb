@@ -1,8 +1,3 @@
-module.exports = {
-  createDirErr,
-  logWriteError
-}
-
 function createDirErr (err) {
   if (err) {
     console.log('Cannot create directory. Error: ', err.code, 'Exiting.')
@@ -16,4 +11,9 @@ function logWriteError (err) {
   if (err) {
     console.log('Error writing log! ' + err.code)
   }
+}
+
+module.exports = {
+  createDirErr,
+  logWriteError
 }

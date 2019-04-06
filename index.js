@@ -1,6 +1,5 @@
 'use strict'
 
-const client = require('coffea')(require('./config.json'))
 const request = require('request')
 const fs = require('fs')
 const moment = require('moment')
@@ -10,31 +9,15 @@ const handler = require('./birbHandler')
 
 var logging = true
 
-try {
-  fs.accessSync('./config.json', fs.constants.F_OK)
-  var config = require('./config.json')
-} catch (err) {
-  console.log(
-    'Config.json not found. Please copy config.sample.json, adjust it and rename it.\n', 'Exiting.'
-  )
-  process.exit(1)
+const onJoin = (config, fs) => event =>{
+  writeLog(logPlace(event, config), event.user.getNick() + ' joined.', fs)
 }
 
-checkLogDir(config.logdir, function (error) {
-  if (error) {
-    console.log('Logging directory cannot be created', error)
-  }
-})
-
-client.on('join', event => {
-  writeLog(logPlace(event), event.user.getNick() + ' joined.')
-})
-
-client.on('part', event => {
+const onPart = event => {
   writeLog(logPlace(event), event.user.getNick() + ' left.')
-})
+}
 
-client.on('topic', event => {
+const onTopic = event => {
   if (event.changed) {
     writeLog(
       logPlace(event),
@@ -52,29 +35,29 @@ client.on('topic', event => {
       '.'
     )
   }
-})
+}
 
-client.on('nick', event => {
+const onNick = event => {
   writeLog(
     logPlace(event),
     event.oldNick + ' changed its nick to ' + event.user.getNick()
   )
-})
+}
 
-client.on('kick', event => {
+const onKick = event => {
   if (event.reason) {
     writeLog(logPlace(event), event.user.getNick(), ' was kicked by ', event.by, ' for ', event.reason, '.')
   } else {
     writeLog(logPlace(event), event.user.getNick(), ' was kicked by ', event.by, '.')
   }
-})
+}
 
-client.on('message', function (event) {
+const onMessage =  event => {
   writeLog(logPlace(event), event.user.nick + ': ' + event.message)
   expandURL(event)
-})
+}
 
-client.on('command', event => {
+const onCommand = event => {
   switch (event.cmd) {
     case 'otr':
       if (logging) {
@@ -93,7 +76,7 @@ client.on('command', event => {
       }
       break
   }
-})
+}
 
 function expandURL (event) {
   let words = event.message.split(' ')
@@ -138,7 +121,7 @@ function checkLogDir (directory) {
   })
 }
 
-function writeLog (where, what) {
+function writeLog (where, what, fs) {
   if (logging) {
     fs.appendFile(
       where,
@@ -148,7 +131,7 @@ function writeLog (where, what) {
   }
 }
 
-function logPlace (event) {
+function logPlace (event, config) {
   return (
     config.logdir +
     '/' +
@@ -209,4 +192,10 @@ function findURL (data) {
   if (expr.test(data)) {
     return data
   }
+}
+
+var greetCurried = greeting => name => console.log(greeting + ", " + name);
+
+module.exports = {
+  onJoin
 }
