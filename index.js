@@ -144,15 +144,6 @@ function expandURL (event) {
     }
   }
 }
-function checkLogDir (directory) {
-  fs.access(directory, fs.constants.F_OK, err => {
-    if (err && err.code === 'ENOENT') {
-      fs.mkdir(directory, handler.createDirErr)
-    } else {
-      handler.createDirErr(err)
-    }
-  })
-}
 
 function findURL (data) {
   data = data.replace(/^[<[]/, '')
