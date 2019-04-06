@@ -3,6 +3,16 @@ const fs = require('fs')
 
 const client = require('coffea')(require('./config.json'))
 
+function checkLogDir (directory) {
+    fs.access(directory, fs.constants.F_OK, err => {
+      if (err && err.code === 'ENOENT') {
+        fs.mkdir(directory, handler.createDirErr)
+      } else {
+        handler.createDirErr(err)
+      }
+    })
+  }
+
 try {
     fs.accessSync('./config.json', fs.constants.F_OK)
     var config = require('./config.json')
@@ -18,6 +28,7 @@ checkLogDir(config.logdir, function (error) {
       console.log('Logging directory cannot be created', error)
     }
   })
+
 
 const birb = Birb.wrapper(config, fs)
 
