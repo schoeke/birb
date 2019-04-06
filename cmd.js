@@ -1,4 +1,5 @@
-const birb = require('./index.js')
+const Birb = require('./index.js')
+const fs = require('fs')
 
 const client = require('coffea')(require('./config.json'))
 
@@ -18,18 +19,18 @@ checkLogDir(config.logdir, function (error) {
     }
   })
 
+const birb = Birb.wrapper(config, fs)
 
+client.on('join', birb.onJoin)
 
-client.on('join', onJoin(config))
+client.on('part', birb.onPart)
 
-client.on('part', onPart)
+client.on('topic', birb.onTopic)
 
-client.on('topic', onTopic)
+client.on('nick', birb.onNick)
 
-client.on('nick', onNick)
+client.on('kick', birb.onKick)
 
-client.on('kick', onKick)
+client.on('message', birb.onMessage)
 
-client.on('message', onMessage)
-
-client.on('command', onCommand)
+client.on('command', birb.onCommand)

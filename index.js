@@ -1,7 +1,6 @@
 'use strict'
 
 const request = require('request')
-const fs = require('fs')
 const moment = require('moment')
 const cheerio = require('cheerio')
 
@@ -9,73 +8,107 @@ const handler = require('./birbHandler')
 
 var logging = true
 
-const onJoin = (config, fs) => event =>{
-  writeLog(logPlace(event, config), event.user.getNick() + ' joined.', fs)
-}
+function wrapper(config, fs){
 
-const onPart = event => {
-  writeLog(logPlace(event), event.user.getNick() + ' left.')
-}
-
-const onTopic = event => {
-  if (event.changed) {
-    writeLog(
-      logPlace(event),
-      'Topic changed to ' + event.topic + ' by ' + event.user.getNick()
-    )
-  } else {
-    writeLog(
-      logPlace(event),
-      'Topic was set to ' +
-      event.topic +
-      ' by ' +
-      event.user.nick +
-      ' on ' +
-      moment(event.time).format('YYYY-MM-DD HH:mm:ss') +
-      '.'
+  function logPlace (event) {
+    return (
+      config.logdir +
+      '/' +
+      event.channel.name.slice(1) +
+      '_' +
+      moment().format('YYYY-MM-DD') +
+      '.log'
     )
   }
-}
-
-const onNick = event => {
-  writeLog(
-    logPlace(event),
-    event.oldNick + ' changed its nick to ' + event.user.getNick()
-  )
-}
-
-const onKick = event => {
-  if (event.reason) {
-    writeLog(logPlace(event), event.user.getNick(), ' was kicked by ', event.by, ' for ', event.reason, '.')
-  } else {
-    writeLog(logPlace(event), event.user.getNick(), ' was kicked by ', event.by, '.')
+  function writeLog (where, what) {
+    if (logging) {
+      fs.appendFile(
+        where,
+        moment().format('HH:mm:ss') + ' ' + what + '\n',
+        handler.logWriteError
+      )
+    }
   }
-}
 
-const onMessage =  event => {
-  writeLog(logPlace(event), event.user.nick + ': ' + event.message)
-  expandURL(event)
-}
-
-const onCommand = event => {
-  switch (event.cmd) {
-    case 'otr':
-      if (logging) {
-        event.reply('Logging has been turned off.')
-      } else {
-        event.reply('Logging has been turned on.')
-      }
-      logging = !logging
-      break
-
-    case 'status':
-      if (logging) {
-        event.reply('Logging is turned on.')
-      } else {
-        event.reply('Logging is turned off.')
-      }
-      break
+  const onJoin = event => {
+    writeLog(logPlace(event), event.user.getNick() + ' joined.')
   }
+
+  const onPart = event => {
+    writeLog(logPlace(event), event.user.getNick() + ' left.')
+  }
+
+  const onTopic = event => {
+    if (event.changed) {
+      writeLog(
+        logPlace(event),
+        'Topic changed to ' + event.topic + ' by ' + event.user.getNick()
+      )
+    } else {
+      writeLog(
+        logPlace(event),
+        'Topic was set to ' +
+        event.topic +
+        ' by ' +
+        event.user.nick +
+        ' on ' +
+        moment(event.time).format('YYYY-MM-DD HH:mm:ss') +
+        '.'
+      )
+    }
+  }
+  
+  const onNick = event => {
+    writeLog(
+      logPlace(event),
+      event.oldNick + ' changed its nick to ' + event.user.getNick()
+    )
+  }
+  
+  const onKick = event => {
+    if (event.reason) {
+      writeLog(logPlace(event), event.user.getNick(), ' was kicked by ', event.by, ' for ', event.reason, '.')
+    } else {
+      writeLog(logPlace(event), event.user.getNick(), ' was kicked by ', event.by, '.')
+    }
+  }
+  
+  const onMessage =  event => {
+    writeLog(logPlace(event), event.user.nick + ': ' + event.message)
+    expandURL(event)
+  }
+  
+  const onCommand = event => {
+    switch (event.cmd) {
+      case 'otr':
+        if (logging) {
+          event.reply('Logging has been turned off.')
+        } else {
+          event.reply('Logging has been turned on.')
+        }
+        logging = !logging
+        break
+  
+      case 'status':
+        if (logging) {
+          event.reply('Logging is turned on.')
+        } else {
+          event.reply('Logging is turned off.')
+        }
+        break
+    }
+  }
+  
+
+  return {
+    onPart,
+    onJoin,
+    onKick,
+    onNick,
+    onCommand,
+    onTopic,
+    onMessage
+  }  
 }
 
 function expandURL (event) {
@@ -119,27 +152,6 @@ function checkLogDir (directory) {
       handler.createDirErr(err)
     }
   })
-}
-
-function writeLog (where, what, fs) {
-  if (logging) {
-    fs.appendFile(
-      where,
-      moment().format('HH:mm:ss') + ' ' + what + '\n',
-      handler.logWriteError
-    )
-  }
-}
-
-function logPlace (event, config) {
-  return (
-    config.logdir +
-    '/' +
-    event.channel.name.slice(1) +
-    '_' +
-    moment().format('YYYY-MM-DD') +
-    '.log'
-  )
 }
 
 function findURL (data) {
@@ -194,8 +206,6 @@ function findURL (data) {
   }
 }
 
-var greetCurried = greeting => name => console.log(greeting + ", " + name);
-
 module.exports = {
-  onJoin
+  wrapper
 }
