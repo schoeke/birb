@@ -4,8 +4,6 @@ const request = require('request')
 const moment = require('moment')
 const cheerio = require('cheerio')
 
-const handler = require('./birbHandler')
-
 var logging = true
 
 function wrapper(config, fs){
@@ -143,15 +141,6 @@ function expandURL (event) {
       })
     }
   }
-}
-function checkLogDir (directory) {
-  fs.access(directory, fs.constants.F_OK, err => {
-    if (err && err.code === 'ENOENT') {
-      fs.mkdir(directory, handler.createDirErr)
-    } else {
-      handler.createDirErr(err)
-    }
-  })
 }
 
 function findURL (data) {
