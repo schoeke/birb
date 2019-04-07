@@ -5,9 +5,8 @@ const moment = require('moment')
 const cheerio = require('cheerio')
 const handler = require('./birbHandler')
 
-var logging = true
-
 function wrapper (config, fs) {
+  let logging = config.defaultLogging
 
   function logPlace (event) {
     return (

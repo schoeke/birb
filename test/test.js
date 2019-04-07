@@ -20,7 +20,8 @@ const fs = {
 }
 
 const config = {
-  logdir: ''
+  logdir: '',
+  defaultLogging: true
 }
 
 describe('Join event', function () {

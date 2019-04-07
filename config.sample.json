@@ -12,5 +12,6 @@
     "username": "test",
     "password": "l33tp455w0rD"
   },
-  "logdir": "pathtologgingdir"
+  "logdir": "pathtologgingdir",
+  "defaultLogging": "true"
 }
