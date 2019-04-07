@@ -2,6 +2,10 @@
   "name": "birb",
   "version": "0.2.0",
   "description": "A simple IRC bot that logs conversations to text files and expands URLs to titles.",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/schoeke/birb.git"
+  },
   "main": "index.js",
   "scripts": {
     "test": "mocha"
