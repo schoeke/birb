@@ -10,6 +10,15 @@ const event = {
   }
 }
 
+const nickEvent = { oldNick: 'Nick', ...event }
+const topicChangeEvent = { ...event, changed: true, topic: 'Test' }
+const topicEvent = { ...topicChangeEvent, changed: false }
+const kickEvent = { ...event, by: 'Nick' }
+const kickReasonEvent = { ...kickEvent, reason: 'nothing' }
+const messageEvent = { ...event, message: 'Message' }
+const commandOtrEvent = { cmd: 'otr' }
+const commandStatusEvent = { cmd: 'status' }
+
 const log = []
 
 const fs = {
@@ -41,5 +50,65 @@ describe('Part event', function () {
     console.log(log)
     assert.strictEqual(log.length, 1)
     assert.ok(log.pop().search('Nickname left.\n') !== -1)
+  })
+})
+
+describe('Topic change event', function () {
+  it('is logged to file', function () {
+    const foo = birb.wrapper(config, fs)
+    foo.onTopic(topicChangeEvent)
+    console.log(log)
+    assert.strictEqual(log.length, 1)
+    assert.ok(log.pop().search('Topic changed to Test by ') !== -1)
+  })
+})
+
+describe('Topic event', function () {
+  it('is logged to file', function () {
+    const foo = birb.wrapper(config, fs)
+    foo.onTopic(topicEvent)
+    console.log(log)
+    assert.strictEqual(log.length, 1)
+    assert.ok(log.pop().search('Topic was set to Test by ') !== -1)
+  })
+})
+
+describe('Nick change event', function () {
+  it('is logged to file', function () {
+    const foo = birb.wrapper(config, fs)
+    foo.onNick(nickEvent)
+    console.log(log)
+    assert.strictEqual(log.length, 1)
+    assert.ok(log.pop().search('Nick changed its nick to Nickname') !== -1)
+  })
+})
+
+describe('Kick event', function () {
+  it('is logged to file', function () {
+    const foo = birb.wrapper(config, fs)
+    foo.onKick(kickEvent)
+    console.log(log)
+    assert.strictEqual(log.length, 1)
+    assert.ok(log.pop().search('Nickname was kicked by Nick') !== -1)
+  })
+})
+
+describe('Kick with reason event', function () {
+  it('is logged to file', function () {
+    const foo = birb.wrapper(config, fs)
+    foo.onKick(kickReasonEvent)
+    console.log(log)
+    assert.strictEqual(log.length, 1)
+    assert.ok(log.pop().search('Nickname was kicked by Nick for nothing') !== -1)
+  })
+})
+
+describe('Message event', function () {
+  it('is logged to file', function () {
+    const foo = birb.wrapper(config, fs)
+    foo.onMessage(messageEvent)
+    console.log(log)
+    assert.strictEqual(log.length, 1)
+    assert.ok(log.pop().search('Nickname: Message') !== -1)
   })
 })
