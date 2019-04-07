@@ -3,10 +3,11 @@
 const request = require('request')
 const moment = require('moment')
 const cheerio = require('cheerio')
+const handler = require('./birbHandler')
 
 var logging = true
 
-function wrapper(config, fs){
+function wrapper (config, fs) {
 
   function logPlace (event) {
     return (
@@ -55,14 +56,14 @@ function wrapper(config, fs){
       )
     }
   }
-  
+
   const onNick = event => {
     writeLog(
       logPlace(event),
       event.oldNick + ' changed its nick to ' + event.user.getNick()
     )
   }
-  
+
   const onKick = event => {
     if (event.reason) {
       writeLog(logPlace(event), event.user.getNick(), ' was kicked by ', event.by, ' for ', event.reason, '.')
@@ -70,12 +71,12 @@ function wrapper(config, fs){
       writeLog(logPlace(event), event.user.getNick(), ' was kicked by ', event.by, '.')
     }
   }
-  
-  const onMessage =  event => {
+
+  const onMessage = event => {
     writeLog(logPlace(event), event.user.nick + ': ' + event.message)
     expandURL(event)
   }
-  
+
   const onCommand = event => {
     switch (event.cmd) {
       case 'otr':
@@ -86,7 +87,7 @@ function wrapper(config, fs){
         }
         logging = !logging
         break
-  
+
       case 'status':
         if (logging) {
           event.reply('Logging is turned on.')
@@ -96,7 +97,7 @@ function wrapper(config, fs){
         break
     }
   }
-  
+
 
   return {
     onPart,
@@ -106,7 +107,7 @@ function wrapper(config, fs){
     onCommand,
     onTopic,
     onMessage
-  }  
+  }
 }
 
 function expandURL (event) {
@@ -130,8 +131,8 @@ function expandURL (event) {
               $('head > title')
                 .text()
                 .trim()
-              // Trim seems not to take out newlines from the middle of the string.
-              // Fix:
+                // Trim seems not to take out newlines from the middle of the string.
+                // Fix:
                 .replace(/\s+/g, ' ')
             )
           } else {
