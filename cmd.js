@@ -30,6 +30,7 @@ checkLogDir(config.logdir, function (error) {
   }
 })
 
+
 const birb = Birb.wrapper(config, fs)
 
 client.on('join', birb.onJoin)
