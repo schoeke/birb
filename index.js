@@ -52,7 +52,6 @@ function wrapper (config, fs) {
   }
 
   const onNick = event => {
-    console.log(`Nick event detected! ${event}`)
     writeLog(
       logPlace(event),
       `${event.oldNick} changed its nick to ${event.user.getNick()}`
