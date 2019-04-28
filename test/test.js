@@ -3,7 +3,8 @@ const assert = require('assert')
 
 const event = {
   user: {
-    getNick: function () { return 'Nickname' }
+    getNick: function () { return 'Nickname' },
+    getChannels: function() {return {'Testchannel': ''}}
   },
   channel: {
     name: '#roomname'
@@ -29,6 +30,7 @@ const fs = {
 }
 
 const config = {
+  channels: ['Testchannel', 'non-existent'],
   logdir: '',
   defaultLogging: true
 }

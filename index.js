@@ -4,15 +4,16 @@ const request = require('request')
 const moment = require('moment')
 const cheerio = require('cheerio')
 const handler = require('./birbHandler')
+const lodash = require('lodash')
 
 function wrapper (config, fs) {
   let logging = config.defaultLogging
 
-  function logPlace (event) {
+  function logPlace (cname) {
     return (
       config.logdir +
       '/' +
-      event.channel.name.slice(1) +
+      cname.slice(1) +
       '_' +
       moment().format('YYYY-MM-DD') +
       '.log'
@@ -29,22 +30,22 @@ function wrapper (config, fs) {
   }
 
   const onJoin = event => {
-    writeLog(logPlace(event), `${event.user.getNick()} joined.`)
+    writeLog(logPlace(event.channel.name), `${event.user.getNick()} joined.`)
   }
 
   const onPart = event => {
-    writeLog(logPlace(event), `${event.user.getNick()} left.`)
+    writeLog(logPlace(event.channel.name), `${event.user.getNick()} left.`)
   }
 
   const onTopic = event => {
     if (event.changed) {
       writeLog(
-        logPlace(event),
+        logPlace(event.channel.name),
         `Topic changed to ${event.topic} by ${event.user.getNick()}`
       )
     } else {
       writeLog(
-        logPlace(event),
+        logPlace(event.channel.name),
         `Topic was set to ${event.topic} by ${event.user.nick} on 
         ${moment(event.time).format('YYYY-MM-DD HH:mm:ss')}.`
       )
@@ -52,22 +53,26 @@ function wrapper (config, fs) {
   }
 
   const onNick = event => {
-    writeLog(
-      logPlace(event),
-      `${event.oldNick} changed its nick to ${event.user.getNick()}`
+    let uchans = Object.keys(event.user.getChannels())
+    let affectedChans = lodash.intersection(config.channels, uchans)
+    affectedChans.map( chan =>
+      writeLog(
+        logPlace(chan),
+        `${event.oldNick} changed its nick to ${event.user.getNick()}`
+      )
     )
   }
 
   const onKick = event => {
     if (event.reason) {
-      writeLog(logPlace(event), `${event.user.getNick()} was kicked by ${event.by} for ${event.reason}.`)
+      writeLog(logPlace(event.channel.name), `${event.user.getNick()} was kicked by ${event.by} for ${event.reason}.`)
     } else {
-      writeLog(logPlace(event), `${event.user.getNick()} was kicked by ${event.by}.`)
+      writeLog(logPlace(event.channel.name), `${event.user.getNick()} was kicked by ${event.by}.`)
     }
   }
 
   const onMessage = event => {
-    writeLog(logPlace(event), event.user.getNick() + ': ' + event.message)
+    writeLog(logPlace(event.channel.name), event.user.getNick() + ': ' + event.message)
     expandURL(event)
   }
 
