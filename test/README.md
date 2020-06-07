@@ -1,6 +1,6 @@
 # birb Tests
 
-To run to tests, make sure you have mocha installed:
+To run the tests, make sure you have mocha installed:
 
     npm install mocha -g
 
