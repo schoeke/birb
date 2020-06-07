@@ -1,6 +1,6 @@
 'use strict'
 
-const request = require('request')
+const axios = require('axios')
 const moment = require('moment')
 const cheerio = require('cheerio')
 const handler = require('./birbHandler')
@@ -108,36 +108,28 @@ function wrapper (config, fs) {
   }
 }
 
-function expandURL (event) {
+async function expandURL (event) {
   let words = event.message.split(' ')
   for (let i = 0; i < words.length; i++) {
     let newURL = findURL(words[i])
     if (newURL) {
-      request(newURL, function (error, response, body) {
-        if (!response) {
-          return event.reply(
-            `Error! No response when fetching ${newURL}.`
-          )
-        } else if (error || response.statusCode !== 200) {
-          return event.reply(
-            `Error ${response.statusCode} when fetching ${newURL}.`
-          )
+      try {
+        const response = await axios.get(newURL)
+        let $ = cheerio.load(response.data)
+        if ($('head > title').text().length) {
+           return event.reply( $('head > title')
+              .text()
+              .trim()
+              // Trim seems not to take out newlines from the middle of the string.
+              // Fix:
+              .replace(/\s+/g, ' '))
         } else {
-          let $ = cheerio.load(body)
-          if ($('head > title').text().length) {
-            return event.reply(
-              $('head > title')
-                .text()
-                .trim()
-                // Trim seems not to take out newlines from the middle of the string.
-                // Fix:
-                .replace(/\s+/g, ' ')
-            )
-          } else {
-            return event.reply('The webpage does not contain a title element.')
-          }
+          return event.reply('The webpage does not contain a title element.')
         }
-      })
+      } catch (error) {
+        const errmsg = (error.response) ? error.response.status : '"' + error.message.trim() + '"'
+        return event.reply(`Error ${errmsg} when fetching ${newURL}.`)
+      }
     }
   }
 }
@@ -145,6 +137,9 @@ function expandURL (event) {
 function findURL (data) {
   data = data.replace(/^[<[]/, '')
   data = data.replace(/[>\]!.,?]$/, '')
+  // Rewrite twitter URLs to nitter since twitter no longer sets a <title> element
+  data = data.replace('https://twitter.com/', 'https://nitter.net/')
+  data = data.replace('https://mobile.twitter.com/', 'https://nitter.net/')
 
   // via https://gist.github.com/dperini/729294 from Diego Perini.
   let expr = new RegExp(
