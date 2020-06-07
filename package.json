@@ -18,12 +18,11 @@
   "license": "CC-BY-NC-SA-4.0",
   "dependencies": {
     "axios": "^0.19.2",
-    "cheerio": "^1.0.0-rc.2",
-    "coffea": "git://github.com/schoeke/coffea.git#master",
-    "moment": "^2.22.2",
-    "request": "^2.88.0"
+    "cheerio": "^1.0.0-rc.3",
+    "coffea": "github:schoeke/coffea",
+    "moment": "^2.26.0"
   },
   "devDependencies": {
-    "mocha": "^6.1.4"
+    "mocha": "^6.2.3"
   }
 }
