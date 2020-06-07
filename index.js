@@ -46,8 +46,7 @@ function wrapper (config, fs) {
     } else {
       writeLog(
         logPlace(event.channel.name),
-        `Topic was set to ${event.topic} by ${event.user.nick} on 
-        ${moment(event.time).format('YYYY-MM-DD HH:mm:ss')}.`
+        `Topic was set to ${event.topic} by ${event.user.nick} on ${moment(event.time).format('YYYY-MM-DD HH:mm:ss')}.`
       )
     }
   }
