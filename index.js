@@ -1,10 +1,56 @@
 'use strict'
 
-const axios = require('axios')
+const fetch = require('node-fetch');
 const moment = require('moment')
 const cheerio = require('cheerio')
 const handler = require('./birbHandler')
 const lodash = require('lodash')
+
+// via https://gist.github.com/dperini/729294 from Diego Perini.
+let urlRe = new RegExp(
+  '^' +
+  // protocol identifier (optional)
+  // short syntax // still required
+  '(?:(?:(?:https?|ftp):)?\\/\\/)' +
+  // user:pass BasicAuth (optional)
+  '(?:\\S+(?::\\S*)?@)?' +
+  '(?:' +
+  // IP address exclusion
+  // private & local networks
+  '(?!(?:10|127)(?:\\.\\d{1,3}){3})' +
+  '(?!(?:169\\.254|192\\.168)(?:\\.\\d{1,3}){2})' +
+  '(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})' +
+  // IP address dotted notation octets
+  // excludes loopback network 0.0.0.0
+  // excludes reserved space >= 224.0.0.0
+  // excludes network & broacast addresses
+  // (first & last IP address of each class)
+  '(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])' +
+  '(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}' +
+  '(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))' +
+  '|' +
+  // host & domain names, may end with dot
+  // can be replaced by a shortest alternative
+  // (?![-_])(?:[-\\w\\u00a1-\\uffff]{0,63}[^-_]\\.)+
+  '(?:' +
+  '(?:' +
+  '[a-z0-9\\u00a1-\\uffff]' +
+  '[a-z0-9\\u00a1-\\uffff_-]{0,62}' +
+  ')?' +
+  '[a-z0-9\\u00a1-\\uffff]\\.' +
+  ')+' +
+  // TLD identifier name, may end with dot
+  '(?:[a-z\\u00a1-\\uffff]{2,}\\.?)' +
+  ')' +
+  // port number (optional)
+  '(?::\\d{2,5})?' +
+  // resource path (optional)
+  '(?:[/?#]\\S*)?' +
+  '$',
+  'i'
+)
+
+let titleRe = new RegExp('<title>([^<]+)</title>', 'i')
 
 function wrapper (config, fs) {
   let logging = config.defaultLogging
@@ -107,28 +153,51 @@ function wrapper (config, fs) {
   }
 }
 
-async function expandURL (event) {
+function checkStatus(res) {
+  if (res.status >= 200 && res.status < 300) {
+    return res
+  } else {
+    let err = new Error(res.statusText)
+    err.response = res
+    throw err
+  }
+}
+
+/**
+ * Strip trailing and leading whitespace from a string and replace all internal
+ * whitespace sequences with single spaces.
+ */
+function normalize(str) {
+  return str.trim().replace(/\s+/g, ' ')
+}
+
+function printTitle(body, reply) {
+  let $ = cheerio.load(body)
+  let titleText = $('head > title').text()
+  if (titleText.length) {
+    return reply(normalize(titleText))
+  } else {
+    // Cheerio has problems with some pages (esp. from YouTube), hence we try
+    // the brute-force regex method as fallback
+    let titleMatch = titleRe.exec(body)
+    if (titleMatch !== null) {
+      return reply(normalize(titleMatch[1]))
+    } else {
+      return reply('The webpage does not contain a title element.')
+    }
+  }
+}
+
+function expandURL (event) {
   let words = event.message.split(' ')
   for (let i = 0; i < words.length; i++) {
     let newURL = findURL(words[i])
     if (newURL) {
-      try {
-        const response = await axios.get(newURL)
-        let $ = cheerio.load(response.data)
-        if ($('head > title').text().length) {
-           return event.reply( $('head > title')
-              .text()
-              .trim()
-              // Trim seems not to take out newlines from the middle of the string.
-              // Fix:
-              .replace(/\s+/g, ' '))
-        } else {
-          return event.reply('The webpage does not contain a title element.')
-        }
-      } catch (error) {
-        const errmsg = (error.response) ? error.response.status : '"' + error.message.trim() + '"'
-        return event.reply(`Error ${errmsg} when fetching ${newURL}.`)
-      }
+      fetch(newURL)
+        .then(checkStatus)
+        .then(res => res.text())
+        .then(body => printTitle(body, event.reply))
+        .catch(err => event.reply(`${err} when fetching ${newURL}.`))
     }
   }
 }
@@ -140,50 +209,7 @@ function findURL (data) {
   data = data.replace('https://twitter.com/', 'https://nitter.net/')
   data = data.replace('https://mobile.twitter.com/', 'https://nitter.net/')
 
-  // via https://gist.github.com/dperini/729294 from Diego Perini.
-  let expr = new RegExp(
-    '^' +
-    // protocol identifier (optional)
-    // short syntax // still required
-    '(?:(?:(?:https?|ftp):)?\\/\\/)' +
-    // user:pass BasicAuth (optional)
-    '(?:\\S+(?::\\S*)?@)?' +
-    '(?:' +
-    // IP address exclusion
-    // private & local networks
-    '(?!(?:10|127)(?:\\.\\d{1,3}){3})' +
-    '(?!(?:169\\.254|192\\.168)(?:\\.\\d{1,3}){2})' +
-    '(?!172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})' +
-    // IP address dotted notation octets
-    // excludes loopback network 0.0.0.0
-    // excludes reserved space >= 224.0.0.0
-    // excludes network & broacast addresses
-    // (first & last IP address of each class)
-    '(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])' +
-    '(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}' +
-    '(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))' +
-    '|' +
-    // host & domain names, may end with dot
-    // can be replaced by a shortest alternative
-    // (?![-_])(?:[-\\w\\u00a1-\\uffff]{0,63}[^-_]\\.)+
-    '(?:' +
-    '(?:' +
-    '[a-z0-9\\u00a1-\\uffff]' +
-    '[a-z0-9\\u00a1-\\uffff_-]{0,62}' +
-    ')?' +
-    '[a-z0-9\\u00a1-\\uffff]\\.' +
-    ')+' +
-    // TLD identifier name, may end with dot
-    '(?:[a-z\\u00a1-\\uffff]{2,}\\.?)' +
-    ')' +
-    // port number (optional)
-    '(?::\\d{2,5})?' +
-    // resource path (optional)
-    '(?:[/?#]\\S*)?' +
-    '$',
-    'i'
-  )
-  if (expr.test(data)) {
+  if (urlRe.test(data)) {
     return data
   }
 }
