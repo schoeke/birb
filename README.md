@@ -2,15 +2,14 @@
 
 To run, rename "config.sample.json" to "config.json" and change it as needed.
 
-Ensure that all needed libraries are installed.
+Ensure that all needed libraries are installed:
 
-    npm install axios cheerio coffea lodash moment
-
-should probably do the trick.
+    npm i
 
 Then call:
 
     node cmd.js
 
 To run some simple tests, run
+
     npm test
