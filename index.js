@@ -1,6 +1,6 @@
 'use strict'
 
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 const moment = require('moment')
 const cheerio = require('cheerio')
 const handler = require('./birbHandler')
