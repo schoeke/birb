@@ -171,19 +171,19 @@ function normalize(str) {
   return str.trim().replace(/\s+/g, ' ')
 }
 
-function printTitle(body, reply) {
+function printTitle(body, event) {
   let $ = cheerio.load(body)
   let titleText = $('head > title').text()
   if (titleText.length) {
-    return reply(normalize(titleText))
+    event.reply(normalize(titleText))
   } else {
     // Cheerio has problems with some pages (esp. from YouTube), hence we try
     // the brute-force regex method as fallback
     let titleMatch = titleRe.exec(body)
     if (titleMatch !== null) {
-      return reply(normalize(titleMatch[1]))
+      event.reply(normalize(titleMatch[1]))
     } else {
-      return reply('The webpage does not contain a title element.')
+      event.reply('The webpage does not contain a title element.')
     }
   }
 }
@@ -196,7 +196,7 @@ function expandURL (event) {
       fetch(newURL)
         .then(checkStatus)
         .then(res => res.text())
-        .then(body => printTitle(body, event.reply))
+        .then(body => printTitle(body, event))
         .catch(err => event.reply(`${err} when fetching ${newURL}.`))
     }
   }
