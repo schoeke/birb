@@ -20,7 +20,7 @@
     "cheerio": "^1.0.0-rc.3",
     "coffea": "github:schoeke/coffea#master",
     "moment": "^2.26.0",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.1"
   },
   "devDependencies": {
     "mocha": "^6.2.3"
